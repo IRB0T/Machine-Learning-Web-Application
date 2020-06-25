@@ -14,7 +14,7 @@ def home():
 
 @app.route('/predict',methods=['POST'])
 def predict():
-	data= pd.read_csv("Combined_data.csv")
+	data= pd.read_csv("Data/Combined_data.csv")
 	data_x = data["CONTENT"]
 	data_y = data["CLASS"]
 	corpus = data_x
