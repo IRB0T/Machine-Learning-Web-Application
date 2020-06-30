@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 import pickle
 from flask import Flask,render_template,url_for,request
 
@@ -21,7 +22,7 @@ def predict():
 	vectorizer = CountVectorizer()
 	X = vectorizer.fit_transform(corpus)
 	X_train, X_test, y_train, y_test = train_test_split(X, data_y, test_size=0.20, random_state=20)
-	model = MultinomialNB()
+	model = LogisticRegression()
 	model.fit(X_train,y_train)
 	model.score(X_test,y_test)
 	ans=''
