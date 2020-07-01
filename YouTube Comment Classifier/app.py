@@ -1,11 +1,30 @@
+import re
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 import pickle
 from flask import Flask,render_template,url_for,request
+data= pd.read_csv("Data/Combined_data.csv")
+data_y = data["CLASS"]
+corpus = []
+Lemmatizer = WordNetLemmatizer()
+for i in range(0,len(data)):
+    text = re.sub('[^a-zA-Z]', ' ', data["CONTENT"][i])
+    text = text.lower()
+    text = text.split()
+    text = [Lemmatizer.lemmatize(word) for word in text if not word in stopwords.words('english')]
+    text = ' '.join(text)
+    corpus.append(text)
+c = TfidfVectorizer(ngram_range=(2,2))
+X = c.fit_transform(corpus)
+X_train, X_test, y_train, y_test = train_test_split(X, data_y, test_size=0.20, random_state=20)
+model = MultinomialNB()
+model.fit(X_train,y_train)
 
 app = Flask(__name__)
 
@@ -15,21 +34,15 @@ def home():
 
 @app.route('/predict',methods=['POST'])
 def predict():
-	data= pd.read_csv("Data/Combined_data.csv")
-	data_x = data["CONTENT"]
-	data_y = data["CLASS"]
-	corpus = data_x
-	vectorizer = CountVectorizer()
-	X = vectorizer.fit_transform(corpus)
-	X_train, X_test, y_train, y_test = train_test_split(X, data_y, test_size=0.20, random_state=20)
-	model = LogisticRegression()
-	model.fit(X_train,y_train)
-	model.score(X_test,y_test)
 	ans=''
 	if request.method == 'POST':
 		msg = request.form['msg']
-		data = [msg]
-		vect = vectorizer.transform(data).toarray()
+		text = re.sub('[^a-zA-Z]', ' ', msg)
+		text = text.lower()
+		text = text.split()
+		text = [Lemmatizer.lemmatize(word) for word in text if not word in stopwords.words('english')]
+		text = ' '.join(text)
+		vect = c.transform([text])	
 		if model.predict(vect) == 1:
 			ans = "Spam"
 		else:
